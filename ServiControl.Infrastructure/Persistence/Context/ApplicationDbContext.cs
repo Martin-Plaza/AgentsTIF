@@ -109,7 +109,6 @@ public class ApplicationDbContext : DbContext
 
             entity.Property(trabajo => trabajo.Estado)
                 .HasConversion<int>()
-                .HasDefaultValue(EstadoTrabajo.Pendiente)
                 .IsRequired();
 
             entity.HasOne<Cliente>()
