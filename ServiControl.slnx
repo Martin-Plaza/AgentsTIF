@@ -1,3 +1,6 @@
 <Solution>
-  <Project Path="AgentsTIF/AgentsTIF.csproj" />
+  <Project Path="ServiControl.Application/ServiControl.Application.csproj" />
+  <Project Path="ServiControl.Domain/ServiControl.Domain.csproj" />
+  <Project Path="ServiControl.Infrastructure/ServiControl.Infrastructure.csproj" />
+  <Project Path="ServiControl.Presentation/ServiControl.Presentation.csproj" />
 </Solution>

@@ -1,0 +1,6 @@
+@ServiControl.Presentation_HostAddress = http://localhost:5141
+
+GET {{ServiControl.Presentation_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
