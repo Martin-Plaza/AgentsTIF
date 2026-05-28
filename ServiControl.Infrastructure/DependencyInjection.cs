@@ -2,8 +2,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using ServiControl.Application.Interfaces;
+using ServiControl.Infrastructure.Authentication;
 using ServiControl.Infrastructure.Persistence.Context;
 using ServiControl.Infrastructure.Persistence.Repositories;
+using ServiControl.Infrastructure.Security;
 
 namespace ServiControl.Infrastructure;
 
@@ -28,6 +30,8 @@ public static class DependencyInjection
         services.AddScoped<ICostoRepository, CostoRepository>();
         services.AddScoped<IMetricaRepository, MetricaRepository>();
         services.AddScoped<IUsuarioRepository, UsuarioRepository>();
+        services.AddScoped<IPasswordHasher, BCryptPasswordHasher>();
+        services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
 
         return services;
     }

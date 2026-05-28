@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ServiControl.Application.DTOs;
 using ServiControl.Application.Interfaces;
@@ -6,6 +7,7 @@ using ServiControl.Domain.Enums;
 namespace ServiControl.Presentation.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/trabajos")]
 public class TrabajosController : ControllerBase
 {

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ServiControl.Application.DTOs;
 using ServiControl.Application.Interfaces;
@@ -5,6 +6,7 @@ using ServiControl.Application.Interfaces;
 namespace ServiControl.Presentation.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/clientes")]
 public class ClientesController : ControllerBase
 {
