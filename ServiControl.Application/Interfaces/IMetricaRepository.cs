@@ -2,7 +2,6 @@ using ServiControl.Domain.Entities;
 
 namespace ServiControl.Application.Interfaces;
 
-public interface IMetricaRepository
+public interface IMetricaRepository : IGenericRepository<Metrica>
 {
-    Task<Metrica> AddAsync(Metrica metrica, CancellationToken cancellationToken = default);
 }

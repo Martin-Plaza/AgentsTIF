@@ -5,6 +5,9 @@ using ServiControl.Domain.Enums;
 
 namespace ServiControl.Application.Services;
 
+// Modulo: Trabajos
+// Capa: Application
+// Responsabilidad: Coordina trabajos y delega reglas de estado a la entidad de dominio.
 public class TrabajoService : ITrabajoService
 {
     private readonly ITrabajoRepository _trabajoRepository;

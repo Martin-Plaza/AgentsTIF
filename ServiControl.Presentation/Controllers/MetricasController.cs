@@ -5,6 +5,9 @@ using ServiControl.Application.Interfaces;
 
 namespace ServiControl.Presentation.Controllers;
 
+// Modulo: Metricas
+// Capa: Presentation
+// Responsabilidad: Expone generacion de metricas por rango de fechas.
 [ApiController]
 [Authorize]
 [Route("api/metricas")]

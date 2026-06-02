@@ -4,6 +4,9 @@ using ServiControl.Application.Interfaces;
 
 namespace ServiControl.Presentation.Controllers;
 
+// Modulo: Autenticacion
+// Capa: Presentation
+// Responsabilidad: Expone registro y login; la logica vive en Application.
 [ApiController]
 [Route("api/auth")]
 public class AuthController : ControllerBase

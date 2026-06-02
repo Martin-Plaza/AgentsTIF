@@ -5,6 +5,9 @@ using ServiControl.Application.Interfaces;
 
 namespace ServiControl.Presentation.Controllers;
 
+// Modulo: Costos
+// Capa: Presentation
+// Responsabilidad: Expone operaciones de costos y delega validaciones a Application/Domain.
 [ApiController]
 [Authorize]
 [Route("api/costos")]

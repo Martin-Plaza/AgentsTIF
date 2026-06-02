@@ -6,6 +6,10 @@ using ServiControl.Application.Interfaces;
 using ServiControl.Application.Services;
 using ServiControl.Infrastructure;
 
+// Modulo: API
+// Capa: Presentation
+// Responsabilidad: Configura servicios HTTP, autenticacion, Swagger y dependencias.
+// Nota: La configuracion se lee desde appsettings o variables de entorno, compatible con Azure App Service.
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Logging.ClearProviders();
@@ -42,15 +46,34 @@ builder.Services.AddSwaggerGen(options =>
 });
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("DevelopmentCors", policy =>
+    options.AddPolicy("CorsPolicy", policy =>
     {
+        if (builder.Environment.IsDevelopment())
+        {
+            policy
+                .AllowAnyOrigin()
+                .AllowAnyHeader()
+                .AllowAnyMethod();
+
+            return;
+        }
+
+        var allowedOrigins = builder.Configuration
+            .GetSection("Cors:AllowedOrigins")
+            .GetChildren()
+            .Select(origin => origin.Value)
+            .Where(origin => !string.IsNullOrWhiteSpace(origin))
+            .Select(origin => origin!)
+            .ToArray();
+
         policy
-            .AllowAnyOrigin()
+            .WithOrigins(allowedOrigins)
             .AllowAnyHeader()
             .AllowAnyMethod();
     });
 });
 
+// Jwt:Key debe configurarse como variable de entorno en Azure: Jwt__Key.
 var jwtKey = builder.Configuration["Jwt:Key"];
 var jwtIssuer = builder.Configuration["Jwt:Issuer"];
 var jwtAudience = builder.Configuration["Jwt:Audience"];
@@ -90,13 +113,14 @@ var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
+    // Swagger queda activo solo en Development para documentar y probar la API durante desarrollo.
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
 app.UseHttpsRedirection();
 
-app.UseCors("DevelopmentCors");
+app.UseCors("CorsPolicy");
 app.UseAuthentication();
 app.UseAuthorization();
 

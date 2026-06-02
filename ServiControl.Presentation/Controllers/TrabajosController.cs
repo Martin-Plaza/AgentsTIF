@@ -6,6 +6,9 @@ using ServiControl.Domain.Enums;
 
 namespace ServiControl.Presentation.Controllers;
 
+// Modulo: Trabajos
+// Capa: Presentation
+// Responsabilidad: Mantiene endpoints REST sin reglas de negocio en el controller.
 [ApiController]
 [Authorize]
 [Route("api/trabajos")]

@@ -5,6 +5,9 @@ using ServiControl.Domain.Enums;
 
 namespace ServiControl.Application.Services;
 
+// Modulo: Metricas
+// Capa: Application
+// Responsabilidad: Calcula metricas de usuario a partir de trabajos finalizados y costos finales.
 public class MetricaService : IMetricaService
 {
     private readonly IMetricaRepository _metricaRepository;

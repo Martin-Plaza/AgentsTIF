@@ -4,6 +4,9 @@ using ServiControl.Domain.Entities;
 
 namespace ServiControl.Application.Services;
 
+// Modulo: Costos
+// Capa: Application
+// Responsabilidad: Registra costos sobre trabajos existentes usando reglas del dominio.
 public class CostoService : ICostoService
 {
     private readonly ICostoRepository _costoRepository;

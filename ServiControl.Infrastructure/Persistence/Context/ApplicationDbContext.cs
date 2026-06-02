@@ -4,6 +4,10 @@ using ServiControl.Domain.Enums;
 
 namespace ServiControl.Infrastructure.Persistence.Context;
 
+// Modulo: Persistencia
+// Capa: Infrastructure
+// Responsabilidad: Mapea entidades de dominio a SQL Server con EF Core.
+// Nota: Se usa Fluent API para mantener Domain libre de atributos de persistencia.
 public class ApplicationDbContext : DbContext
 {
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)

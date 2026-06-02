@@ -5,32 +5,16 @@ using ServiControl.Infrastructure.Persistence.Context;
 
 namespace ServiControl.Infrastructure.Persistence.Repositories;
 
-public class CostoRepository : ICostoRepository
+public class CostoRepository : GenericRepository<Costo>, ICostoRepository
 {
-    private readonly ApplicationDbContext _context;
-
     public CostoRepository(ApplicationDbContext context)
+        : base(context)
     {
-        _context = context;
-    }
-
-    public async Task<Costo> AddAsync(Costo costo, CancellationToken cancellationToken = default)
-    {
-        await _context.Costos.AddAsync(costo, cancellationToken);
-        await _context.SaveChangesAsync(cancellationToken);
-
-        return costo;
-    }
-
-    public async Task UpdateAsync(Costo costo, CancellationToken cancellationToken = default)
-    {
-        _context.Costos.Update(costo);
-        await _context.SaveChangesAsync(cancellationToken);
     }
 
     public async Task<Costo?> GetByTrabajoIdAsync(int trabajoId, CancellationToken cancellationToken = default)
     {
-        return await _context.Costos
+        return await DbSet
             .FirstOrDefaultAsync(costo => costo.TrabajoId == trabajoId, cancellationToken);
     }
 
@@ -45,7 +29,7 @@ public class CostoRepository : ICostoRepository
             return [];
         }
 
-        return await _context.Costos
+        return await DbSet
             .AsNoTracking()
             .Where(costo => ids.Contains(costo.TrabajoId))
             .ToListAsync(cancellationToken);

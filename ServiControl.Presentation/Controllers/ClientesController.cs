@@ -5,6 +5,9 @@ using ServiControl.Application.Interfaces;
 
 namespace ServiControl.Presentation.Controllers;
 
+// Modulo: Clientes
+// Capa: Presentation
+// Responsabilidad: Recibe requests HTTP y delega el caso de uso al servicio de Application.
 [ApiController]
 [Authorize]
 [Route("api/clientes")]

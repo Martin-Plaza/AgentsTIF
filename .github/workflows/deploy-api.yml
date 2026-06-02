@@ -1,0 +1,46 @@
+name: Deploy ServiControl API
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+env:
+  DOTNET_VERSION: '10.0.x'
+  PROJECT_PATH: ServiControl.Presentation/ServiControl.Presentation.csproj
+  PUBLISH_DIR: ./publish
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore
+        run: dotnet restore ServiControl.slnx
+
+      - name: Build
+        run: dotnet build ServiControl.slnx --configuration Release --no-restore
+
+      - name: Publish API
+        run: dotnet publish ${{ env.PROJECT_PATH }} --configuration Release --no-build --output ${{ env.PUBLISH_DIR }}
+
+      # Configure these secrets in GitHub before using real deployment:
+      # AZURE_WEBAPP_NAME: Azure App Service name.
+      # AZURE_WEBAPP_PUBLISH_PROFILE: publish profile downloaded from Azure App Service.
+      # Runtime app settings such as Jwt__Key and ConnectionStrings__DefaultConnection
+      # must be configured in Azure, not stored in this workflow.
+      - name: Deploy to Azure App Service
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ secrets.AZURE_WEBAPP_NAME }}
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          package: ${{ env.PUBLISH_DIR }}

@@ -8,6 +8,10 @@ using ServiControl.Domain.Entities;
 
 namespace ServiControl.Infrastructure.Authentication;
 
+// Modulo: Autenticacion
+// Capa: Infrastructure
+// Responsabilidad: Genera JWT firmados usando configuracion externa.
+// Nota: Application solo conoce IJwtTokenGenerator, no detalles de librerias JWT.
 public class JwtTokenGenerator : IJwtTokenGenerator
 {
     private readonly IConfiguration _configuration;
@@ -44,6 +48,7 @@ public class JwtTokenGenerator : IJwtTokenGenerator
             throw new InvalidOperationException("La expiracion JWT debe ser mayor a cero.");
         }
 
+        // JWT permite proteger endpoints sin guardar estado de sesion en el servidor.
         var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
         var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 

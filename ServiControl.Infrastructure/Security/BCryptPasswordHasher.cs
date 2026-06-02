@@ -2,6 +2,9 @@ using ServiControl.Application.Interfaces;
 
 namespace ServiControl.Infrastructure.Security;
 
+// Modulo: Seguridad
+// Capa: Infrastructure
+// Responsabilidad: Hashea y verifica passwords usando BCrypt.
 public class BCryptPasswordHasher : IPasswordHasher
 {
     public string Hash(string password)
@@ -11,6 +14,7 @@ public class BCryptPasswordHasher : IPasswordHasher
             throw new ArgumentException("La password es obligatoria.", nameof(password));
         }
 
+        // Nunca se guarda la password en texto plano; solo se persiste el hash.
         return BCrypt.Net.BCrypt.HashPassword(password);
     }
 

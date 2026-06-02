@@ -4,6 +4,9 @@ using ServiControl.Domain.Entities;
 
 namespace ServiControl.Application.Services;
 
+// Modulo: Clientes
+// Capa: Application
+// Responsabilidad: Coordina casos de uso de clientes y devuelve DTOs a la API.
 public class ClienteService : IClienteService
 {
     private readonly IClienteRepository _clienteRepository;

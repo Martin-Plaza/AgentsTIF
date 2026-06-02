@@ -4,6 +4,10 @@ using ServiControl.Domain.Entities;
 
 namespace ServiControl.Application.Services;
 
+// Modulo: Autenticacion
+// Capa: Application
+// Responsabilidad: Orquesta registro y login sin acoplarse a infraestructura concreta.
+// Nota: La generacion de JWT y el hashing se consumen mediante abstracciones.
 public class AuthService : IAuthService
 {
     private readonly IUsuarioRepository _usuarioRepository;
