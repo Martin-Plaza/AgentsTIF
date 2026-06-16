@@ -14,9 +14,21 @@ Este documento resume como circulan las solicitudes dentro del backend y sirve c
    Implementa persistencia, hashing, JWT y servicios externos. Depende de Application e implementa sus interfaces.
 
 4. Presentation
-   Expone la Web API, controllers, Swagger, CORS y autenticacion HTTP. Depende de Application e Infrastructure.
+   Expone la Web API, controllers, Swagger, CORS y autenticacion HTTP. Depende de Application para usar DTOs e interfaces, y de Infrastructure solo para registrar implementaciones concretas.
 
 Clean Architecture se usa para que las reglas centrales del sistema no dependan de frameworks ni detalles externos. Controllers llaman servicios, servicios usan interfaces de repositorio, repositorios usan `ApplicationDbContext` y EF Core persiste en SQL Server.
+
+## Referencias entre proyectos
+
+```txt
+ServiControl.Presentation -> ServiControl.Application
+ServiControl.Presentation -> ServiControl.Infrastructure
+ServiControl.Infrastructure -> ServiControl.Application
+ServiControl.Application -> ServiControl.Domain
+ServiControl.Domain -> ninguna capa
+```
+
+En `Program.cs`, Presentation registra las interfaces de Application con sus servicios de caso de uso y llama `AddInfrastructure(...)` para registrar EF Core, repositorios, JWT, hashing y servicios externos. Los controllers no usan `ApplicationDbContext`, repositorios concretos ni clases concretas de Infrastructure.
 
 ## Registro de usuario
 

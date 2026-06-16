@@ -15,10 +15,14 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 
+//servicio para los controladores
 builder.Services.AddControllers();
+
+//servicio para que swagger lea los endpoints
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
+    //definimos como va a usar el token (es para cuando usemos [autorize] en swagger boton arriba a la derecha)
     options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Name = "Authorization",
@@ -28,7 +32,7 @@ builder.Services.AddSwaggerGen(options =>
         In = ParameterLocation.Header,
         Description = "Ingrese el token con el formato: Bearer {token}"
     });
-
+    //aca usamos el esquema anterior OpenApiSecurityRequrement, el que acabamos de definir arriba.
     options.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
         {
@@ -44,10 +48,13 @@ builder.Services.AddSwaggerGen(options =>
         }
     });
 });
+
+//las politicas de CORS permiten que un frontend consuma nuestra API. en nuestras politicas validamos quien queremos que consuma nuestra API (desde el navegador)
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("CorsPolicy", policy =>
     {
+        //en entorno de desarrollo puede consumirla desde cualquier lugar (swagger por ejemplo)
         if (builder.Environment.IsDevelopment())
         {
             policy
@@ -58,7 +65,11 @@ builder.Services.AddCors(options =>
             return;
         }
 
+        //aca aplicamos la politica CORS fuera del entorno de desarrollo
         var allowedOrigins = builder.Configuration
+        //getsection toma toda la seccion cors
+        //getChildren los hijos de esa seccion
+        //
             .GetSection("Cors:AllowedOrigins")
             .GetChildren()
             .Select(origin => origin.Value)

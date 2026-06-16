@@ -26,14 +26,17 @@ public class AuthController : ControllerBase
         try
         {
             var user = await _authService.RegisterAsync(request, cancellationToken);
+            //string.Empty reemplaza a la url del recurso creado
             return Created(string.Empty, user);
         }
         catch (ArgumentException ex)
         {
+            //bad request es por un un mail invalido por ejemplo
             return BadRequest(ex.Message);
         }
         catch (InvalidOperationException ex)
         {
+            //es cuando esta bien la request pero hay conflicto en la logica del sistema (por ejemplo un mail existente)
             return Conflict(ex.Message);
         }
     }
@@ -50,6 +53,7 @@ public class AuthController : ControllerBase
         }
         catch (InvalidOperationException ex)
         {
+            //sin autorizacion el usuario
             return Unauthorized(ex.Message);
         }
     }

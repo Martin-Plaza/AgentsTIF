@@ -40,10 +40,14 @@ public class AuthService : IAuthService
             throw new InvalidOperationException("El email ya esta registrado.");
         }
 
+        //hashea password
         var passwordHash = _passwordHasher.Hash(request.Password);
+        //crea instancia de usuario (capa dominio)
         var usuario = new Usuario(request.Nombre, email, passwordHash, request.Rol);
+        //ingresa el usuario en el repositorio
         var created = await _usuarioRepository.AddAsync(usuario, cancellationToken);
 
+        //le pasamos el DTO para mostrarlo
         return MapToResponse(created);
     }
 
