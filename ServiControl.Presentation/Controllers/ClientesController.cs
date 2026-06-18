@@ -27,6 +27,7 @@ public class ClientesController : ControllerBase
     {
         try
         {
+            //en cliente se va a guardar el DTO creado en crearAsync y es lo que va a devolver el endPoint
             var cliente = await _clienteService.CrearAsync(request, cancellationToken);
             return CreatedAtAction(nameof(ObtenerPorId), new { id = cliente.Id }, cliente);
         }
@@ -37,6 +38,7 @@ public class ClientesController : ControllerBase
     }
 
     [HttpGet]
+    //IReadOnlyList es una interfaz que ya viene con .NET, para indicar que solo se puede leer lo que devuelva el endPoint
     public async Task<ActionResult<IReadOnlyList<ClienteResponse>>> ObtenerTodos(
         CancellationToken cancellationToken)
     {

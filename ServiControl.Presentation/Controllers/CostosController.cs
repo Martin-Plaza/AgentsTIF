@@ -59,11 +59,13 @@ public class CostosController : ControllerBase
     [HttpPut("{id:int}/final")]
     public async Task<ActionResult<CostoResponse>> RegistrarCostoFinal(
         int id,
+        //ingresamos solo por body el costo final
         [FromBody] decimal costoFinal,
         CancellationToken cancellationToken)
     {
         try
         {
+            //creara el DTO y se lo pasa al servicio de costo
             var costo = await _costoService.RegistrarCostoFinalAsync(
                 new RegisterCostoFinalRequest(id, costoFinal),
                 cancellationToken);

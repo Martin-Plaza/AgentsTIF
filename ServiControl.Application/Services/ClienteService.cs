@@ -20,6 +20,7 @@ public class ClienteService : IClienteService
         CreateClienteRequest request,
         CancellationToken cancellationToken = default)
     {
+        //crea un cliente de dominio (en el return devolvemos el DTO creado al final de este modulo MapToResponse)
         var cliente = new Cliente(
             request.Nombre,
             request.Telefono,
@@ -41,6 +42,7 @@ public class ClienteService : IClienteService
 
     public async Task<ClienteResponse> ObtenerPorIdAsync(int id, CancellationToken cancellationToken = default)
     {
+        //si devuelve algo el repositorio, es decir, se obtuvo algun ID se guarda, sino arroja la excepcion (por eso el "??")
         var cliente = await _clienteRepository.GetByIdAsync(id, cancellationToken)
             ?? throw new ArgumentException("El cliente indicado no existe.", nameof(id));
 
@@ -66,6 +68,7 @@ public class ClienteService : IClienteService
         return MapToResponse(cliente);
     }
 
+    //creador del DTO para devolver respuesta al endPoint
     private static ClienteResponse MapToResponse(Cliente cliente)
     {
         return new ClienteResponse(
