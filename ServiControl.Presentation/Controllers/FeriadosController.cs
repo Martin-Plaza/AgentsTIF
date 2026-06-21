@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using ServiControl.Application.Authorization;
 using ServiControl.Application.DTOs;
 using ServiControl.Application.Interfaces;
 
@@ -9,7 +10,7 @@ namespace ServiControl.Presentation.Controllers;
 // Capa: Presentation
 // Responsabilidad: Expone el consumo protegido de feriados de Argentina.
 [ApiController]
-[Authorize]
+[Authorize(Roles = Roles.Todos)]
 [Route("api/feriados")]
 public class FeriadosController : ControllerBase
 {

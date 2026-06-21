@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -106,6 +107,7 @@ builder.Services
             ValidateIssuerSigningKey = true,
             ValidIssuer = jwtIssuer,
             ValidAudience = jwtAudience,
+            RoleClaimType = ClaimTypes.Role,
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
         };
     });
@@ -117,6 +119,7 @@ builder.Services.AddScoped<ITrabajoService, TrabajoService>();
 builder.Services.AddScoped<ICostoService, CostoService>();
 builder.Services.AddScoped<IMetricaService, MetricaService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IUsuarioService, UsuarioService>();
 
 builder.Services.AddInfrastructure(builder.Configuration);
 

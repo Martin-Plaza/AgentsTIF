@@ -30,4 +30,20 @@ public class UsuarioRepository : GenericRepository<Usuario>, IUsuarioRepository
         return await DbSet
             .AnyAsync(usuario => usuario.Email == email, cancellationToken);
     }
+
+    public async Task<bool> HasRelatedRecordsAsync(
+        int id,
+        CancellationToken cancellationToken = default)
+    {
+        var tieneTrabajos = await Context.Set<Trabajo>()
+            .AnyAsync(trabajo => trabajo.UsuarioId == id, cancellationToken);
+
+        if (tieneTrabajos)
+        {
+            return true;
+        }
+
+        return await Context.Set<Metrica>()
+            .AnyAsync(metrica => metrica.UsuarioId == id, cancellationToken);
+    }
 }

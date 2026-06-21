@@ -1,4 +1,6 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using ServiControl.Application.Authorization;
 using ServiControl.Application.DTOs;
 using ServiControl.Application.Interfaces;
 
@@ -18,6 +20,8 @@ public class AuthController : ControllerBase
         _authService = authService;
     }
 
+    // Solo un administrador autenticado puede crear usuarios y asignarles un rol.
+    [Authorize(Roles = Roles.Admin)]
     [HttpPost("register")]
     public async Task<ActionResult<UserResponseDto>> Register(
         RegisterUserRequestDto request,
@@ -41,6 +45,7 @@ public class AuthController : ControllerBase
         }
     }
 
+    [AllowAnonymous]
     [HttpPost("login")]
     public async Task<ActionResult<LoginResponseDto>> Login(
         LoginRequestDto request,

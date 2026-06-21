@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using ServiControl.Application.Authorization;
 using ServiControl.Application.DTOs;
 using ServiControl.Application.Interfaces;
 
@@ -9,7 +10,7 @@ namespace ServiControl.Presentation.Controllers;
 // Capa: Presentation
 // Responsabilidad: Expone generacion de metricas por rango de fechas.
 [ApiController]
-[Authorize]
+[Authorize(Roles = Roles.AdminTecnico)]
 [Route("api/metricas")]
 public class MetricasController : ControllerBase
 {

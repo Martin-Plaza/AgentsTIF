@@ -27,6 +27,8 @@ public class Usuario
             throw new ArgumentException("La password del usuario es obligatoria.", nameof(passwordHash));
         }
 
+        ValidarRol(rol);
+
         Nombre = nombre;
         Email = email;
         PasswordHash = passwordHash;
@@ -51,6 +53,15 @@ public class Usuario
 
     public void CambiarRol(RolUsuario rol)
     {
+        ValidarRol(rol);
         Rol = rol;
+    }
+
+    private static void ValidarRol(RolUsuario rol)
+    {
+        if (!Enum.IsDefined(rol))
+        {
+            throw new ArgumentException("El rol indicado no es valido.", nameof(rol));
+        }
     }
 }
