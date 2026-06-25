@@ -32,13 +32,15 @@ En `Program.cs`, Presentation registra las interfaces de Application con sus ser
 
 ## Registro de usuario
 
-1. `POST /api/auth/register` recibe nombre, email, password y rol.
-2. `AuthController` delega en `IAuthService`.
-3. `AuthService` valida email unico mediante `IUsuarioRepository`.
-4. `AuthService` solicita el hash a `IPasswordHasher`.
-5. `BCryptPasswordHasher` genera un hash BCrypt.
-6. `UsuarioRepository` guarda el usuario con EF Core.
-7. La API devuelve datos basicos del usuario sin exponer la password.
+1. `POST /api/auth/register` recibe nombre, email, password, rol y, si corresponde, `IdUsuarioResponsable`.
+2. El endpoint requiere JWT con rol `Admin`.
+3. `AuthController` delega en `IAuthService`.
+4. `AuthService` valida email unico mediante `IUsuarioRepository`.
+5. Si el usuario a crear es `Assistant`, `AuthService` valida que el responsable exista y tenga rol `Technician`.
+6. `AuthService` solicita el hash a `IPasswordHasher`.
+7. `BCryptPasswordHasher` genera un hash BCrypt.
+8. `UsuarioRepository` guarda el usuario con EF Core.
+9. La API devuelve datos basicos del usuario sin exponer la password.
 
 ## Login con JWT
 
@@ -58,10 +60,26 @@ En `Program.cs`, Presentation registra las interfaces de Application con sus ser
 
 ## Crear trabajo
 
-1. `POST /api/trabajos` recibe cliente, usuario, categoria, descripcion, fecha y direccion.
-2. `TrabajoService` valida que existan cliente y usuario.
-3. La entidad `Trabajo` nace en estado `Pendiente`.
-4. `TrabajoRepository` guarda el trabajo.
+1. `POST /api/trabajos` recibe cliente, categoria, descripcion, fecha y direccion.
+2. El request no recibe `UsuarioId`.
+3. `TrabajoService` valida que exista el cliente.
+4. `OperationalUserResolver` calcula el usuario operativo desde JWT y base de datos.
+5. Si el usuario autenticado es Tecnico, el trabajo queda asociado a ese Tecnico.
+6. Si el usuario autenticado es Asistente, el trabajo queda asociado al Tecnico responsable.
+7. La entidad `Trabajo` nace en estado `Pendiente`.
+8. `TrabajoRepository` guarda el trabajo.
+
+## Usuario operativo
+
+El usuario operativo es el `UsuarioId` real que se usa para consultar, crear o modificar trabajos, costos y metricas.
+
+```txt
+JWT del Tecnico    -> usuario operativo = Id del Tecnico
+JWT del Asistente  -> usuario operativo = IdUsuarioResponsable
+JWT del Admin      -> acceso global segun endpoint
+```
+
+Esta regla esta centralizada en `OperationalUserResolver`. Los controllers no calculan esta decision y el frontend no envia el `UsuarioId` operativo.
 
 ## Cambiar estado de trabajo
 
@@ -82,12 +100,15 @@ En `Program.cs`, Presentation registra las interfaces de Application con sus ser
 
 ## Generar metricas
 
-1. `GET /api/metricas?usuarioId=...&periodoInicio=...&periodoFin=...`.
-2. `MetricaService` obtiene trabajos del usuario en el rango.
-3. Solo considera trabajos `Finalizado` para ingresos.
-4. Suma costos finales y calcula promedio.
-5. La entidad `Metrica` valida que `periodoInicio <= periodoFin`.
-6. `MetricaRepository` guarda la metrica.
+1. `GET /api/metricas/mis-metricas?periodoInicio=...&periodoFin=...`.
+2. `OperationalUserResolver` calcula el usuario operativo.
+3. `MetricaService` obtiene trabajos del usuario operativo en el rango.
+4. Solo considera trabajos `Finalizado` para ingresos.
+5. Suma costos finales y calcula promedio.
+6. La entidad `Metrica` valida que `periodoInicio <= periodoFin`.
+7. `MetricaRepository` guarda la metrica.
+
+La ruta administrativa `GET /api/metricas/usuario/{usuarioId}` existe solo para `Admin` y permite generar metricas de un usuario especifico.
 
 ## Flujo de persistencia con EF Core
 
@@ -104,7 +125,8 @@ En `Program.cs`, Presentation registra las interfaces de Application con sus ser
 2. Swagger o el cliente HTTP envia `Authorization: Bearer {token}`.
 3. `UseAuthentication()` valida firma, issuer, audience y expiracion.
 4. `[Authorize]` bloquea endpoints protegidos si no hay token valido.
-5. Endpoints publicos: `POST /api/auth/register` y `POST /api/auth/login`.
+5. Endpoint publico: `POST /api/auth/login`.
+6. `POST /api/auth/register` requiere rol `Admin`.
 
 ## Servicio externo de feriados
 

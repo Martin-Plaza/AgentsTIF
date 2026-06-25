@@ -1,6 +1,7 @@
 using ServiControl.Application.DTOs;
 using ServiControl.Application.Interfaces;
 using ServiControl.Domain.Entities;
+using ServiControl.Domain.Enums;
 
 namespace ServiControl.Application.Services;
 
@@ -42,13 +43,35 @@ public class AuthService : IAuthService
 
         //hashea password
         var passwordHash = _passwordHasher.Hash(request.Password);
+
+        await ValidarResponsableAsync(request.Rol, request.IdUsuarioResponsable, cancellationToken);
+
         //crea instancia de usuario (capa dominio)
-        var usuario = new Usuario(request.Nombre, email, passwordHash, request.Rol);
+        var usuario = new Usuario(
+            request.Nombre,
+            email,
+            passwordHash,
+            request.Rol,
+            request.IdUsuarioResponsable);
         //ingresa el usuario en el repositorio
         var created = await _usuarioRepository.AddAsync(usuario, cancellationToken);
 
         //le pasamos el DTO para mostrarlo
         return MapToResponse(created);
+    }
+
+    public Task<UserResponseDto> CreateAdminAsync(
+        CreateAdminRequestDto request,
+        CancellationToken cancellationToken = default)
+    {
+        return RegisterAsync(
+            new RegisterUserRequestDto(
+                request.Nombre,
+                request.Email,
+                request.Password,
+                RolUsuario.Admin,
+                IdUsuarioResponsable: null),
+            cancellationToken);
     }
 
     public async Task<LoginResponseDto> LoginAsync(
@@ -83,6 +106,39 @@ public class AuthService : IAuthService
             usuario.Id,
             usuario.Nombre,
             usuario.Email,
-            usuario.Rol);
+            usuario.Rol,
+            usuario.IdUsuarioResponsable);
+    }
+
+    private async Task ValidarResponsableAsync(
+        RolUsuario rol,
+        int? idUsuarioResponsable,
+        CancellationToken cancellationToken)
+    {
+        if (rol != RolUsuario.Assistant)
+        {
+            return;
+        }
+
+        if (!idUsuarioResponsable.HasValue)
+        {
+            throw new ArgumentException(
+                "Un asistente debe tener un tecnico responsable.",
+                nameof(idUsuarioResponsable));
+        }
+
+        var responsable = await _usuarioRepository.GetByIdAsync(
+            idUsuarioResponsable.Value,
+            cancellationToken)
+            ?? throw new ArgumentException(
+                "El tecnico responsable indicado no existe.",
+                nameof(idUsuarioResponsable));
+
+        if (responsable.Rol != RolUsuario.Technician)
+        {
+            throw new ArgumentException(
+                "El usuario responsable debe tener rol Tecnico.",
+                nameof(idUsuarioResponsable));
+        }
     }
 }

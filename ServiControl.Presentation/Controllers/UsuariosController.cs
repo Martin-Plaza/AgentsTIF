@@ -78,6 +78,10 @@ public class UsuariosController : ControllerBase
         {
             return BadRequest(ex.Message);
         }
+        catch (InvalidOperationException ex)
+        {
+            return Conflict(ex.Message);
+        }
     }
 
     [HttpDelete("{id:int}")]

@@ -9,8 +9,15 @@ public class Usuario
     public string Email { get; private set; }
     public string PasswordHash { get; private set; }
     public RolUsuario Rol { get; private set; }
+    public int? IdUsuarioResponsable { get; private set; }
+    public Usuario? UsuarioResponsable { get; private set; }
 
-    public Usuario(string nombre, string email, string passwordHash, RolUsuario rol)
+    public Usuario(
+        string nombre,
+        string email,
+        string passwordHash,
+        RolUsuario rol,
+        int? idUsuarioResponsable = null)
     {
         if (string.IsNullOrWhiteSpace(nombre))
         {
@@ -27,12 +34,10 @@ public class Usuario
             throw new ArgumentException("La password del usuario es obligatoria.", nameof(passwordHash));
         }
 
-        ValidarRol(rol);
-
         Nombre = nombre;
         Email = email;
         PasswordHash = passwordHash;
-        Rol = rol;
+        ConfigurarRolYResponsable(rol, idUsuarioResponsable);
     }
 
     public void ActualizarDatos(string nombre, string email)
@@ -51,10 +56,31 @@ public class Usuario
         Email = email;
     }
 
-    public void CambiarRol(RolUsuario rol)
+    public void CambiarRol(RolUsuario rol, int? idUsuarioResponsable = null)
+    {
+        ConfigurarRolYResponsable(rol, idUsuarioResponsable);
+    }
+
+    private void ConfigurarRolYResponsable(RolUsuario rol, int? idUsuarioResponsable)
     {
         ValidarRol(rol);
+
+        if (rol == RolUsuario.Assistant)
+        {
+            if (!idUsuarioResponsable.HasValue || idUsuarioResponsable.Value <= 0)
+            {
+                throw new ArgumentException(
+                    "Un asistente debe tener un tecnico responsable.",
+                    nameof(idUsuarioResponsable));
+            }
+
+            Rol = rol;
+            IdUsuarioResponsable = idUsuarioResponsable;
+            return;
+        }
+
         Rol = rol;
+        IdUsuarioResponsable = null;
     }
 
     private static void ValidarRol(RolUsuario rol)

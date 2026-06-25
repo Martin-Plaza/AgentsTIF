@@ -10,7 +10,7 @@ namespace ServiControl.Presentation.Controllers;
 // Capa: Presentation
 // Responsabilidad: Expone generacion de metricas por rango de fechas.
 [ApiController]
-[Authorize(Roles = Roles.AdminTecnico)]
+[Authorize(Roles = Roles.Todos)]
 [Route("api/metricas")]
 public class MetricasController : ControllerBase
 {
@@ -21,17 +21,39 @@ public class MetricasController : ControllerBase
         _metricaService = metricaService;
     }
 
-    [HttpGet]
-    public async Task<ActionResult<MetricaResponse>> GenerarPorRango(
-        [FromQuery] int usuarioId,
-        [FromQuery] DateTime periodoInicio,
-        [FromQuery] DateTime periodoFin,
+    [HttpGet("mis-metricas")]
+    public async Task<ActionResult<MetricaResponse>> GenerarPropias(
+        [FromQuery] DateOnly periodoInicio,
+        [FromQuery] DateOnly periodoFin,
         CancellationToken cancellationToken)
     {
         try
         {
-            var metrica = await _metricaService.GenerarPorRangoAsync(
-                new GenerateMetricaRequest(usuarioId, periodoInicio, periodoFin),
+            var metrica = await _metricaService.GenerarPropiasAsync(
+                new GenerateMetricaRequest(periodoInicio, periodoFin),
+                cancellationToken);
+
+            return Ok(metrica);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [Authorize(Roles = Roles.Admin)]
+    [HttpGet("usuario/{usuarioId:int}")]
+    public async Task<ActionResult<MetricaResponse>> GenerarParaUsuario(
+        int usuarioId,
+        [FromQuery] DateOnly periodoInicio,
+        [FromQuery] DateOnly periodoFin,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var metrica = await _metricaService.GenerarParaUsuarioAsync(
+                usuarioId,
+                new GenerateMetricaRequest(periodoInicio, periodoFin),
                 cancellationToken);
 
             return Ok(metrica);

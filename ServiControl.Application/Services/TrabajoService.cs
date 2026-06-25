@@ -1,3 +1,4 @@
+using ServiControl.Application.Authorization;
 using ServiControl.Application.DTOs;
 using ServiControl.Application.Interfaces;
 using ServiControl.Domain.Entities;
@@ -12,16 +13,19 @@ public class TrabajoService : ITrabajoService
 {
     private readonly ITrabajoRepository _trabajoRepository;
     private readonly IClienteRepository _clienteRepository;
-    private readonly IUsuarioRepository _usuarioRepository;
+    private readonly ICurrentUserContext _currentUserContext;
+    private readonly IOperationalUserResolver _operationalUserResolver;
 
     public TrabajoService(
         ITrabajoRepository trabajoRepository,
         IClienteRepository clienteRepository,
-        IUsuarioRepository usuarioRepository)
+        ICurrentUserContext currentUserContext,
+        IOperationalUserResolver operationalUserResolver)
     {
         _trabajoRepository = trabajoRepository;
         _clienteRepository = clienteRepository;
-        _usuarioRepository = usuarioRepository;
+        _currentUserContext = currentUserContext;
+        _operationalUserResolver = operationalUserResolver;
     }
 
     public async Task<TrabajoResponse> CrearAsync(
@@ -33,14 +37,12 @@ public class TrabajoService : ITrabajoService
             throw new ArgumentException("El cliente indicado no existe.", nameof(request.ClienteId));
         }
 
-        if (!await _usuarioRepository.ExistsByIdAsync(request.UsuarioId, cancellationToken))
-        {
-            throw new ArgumentException("El usuario indicado no existe.", nameof(request.UsuarioId));
-        }
+        var usuarioOperativoId = await _operationalUserResolver
+            .ObtenerUsuarioOperativoIdAsync(cancellationToken);
 
         var trabajo = new Trabajo(
             request.ClienteId,
-            request.UsuarioId,
+            usuarioOperativoId,
             request.CategoriaServicio,
             request.Descripcion,
             request.Fecha,
@@ -55,7 +57,14 @@ public class TrabajoService : ITrabajoService
     public async Task<IReadOnlyList<TrabajoResponse>> ObtenerTodosAsync(
         CancellationToken cancellationToken = default)
     {
-        var trabajos = await _trabajoRepository.GetAllAsync(cancellationToken);
+        var usuarioOperativoId = await _operationalUserResolver
+            .ObtenerUsuarioOperativoIdAsync(cancellationToken);
+
+        var trabajos = _currentUserContext.IsAdmin
+            ? await _trabajoRepository.GetAllAsync(cancellationToken)
+            : await _trabajoRepository.GetByUsuarioAsync(
+                usuarioOperativoId,
+                cancellationToken);
 
         return trabajos.Select(MapToResponse).ToList();
     }
@@ -63,15 +72,21 @@ public class TrabajoService : ITrabajoService
     public async Task<IReadOnlyList<TrabajoResponse>> ObtenerPendientesAsync(
         CancellationToken cancellationToken = default)
     {
-        var trabajos = await _trabajoRepository.GetPendientesAsync(cancellationToken);
+        var usuarioOperativoId = await _operationalUserResolver
+            .ObtenerUsuarioOperativoIdAsync(cancellationToken);
+
+        var trabajos = _currentUserContext.IsAdmin
+            ? await _trabajoRepository.GetPendientesAsync(cancellationToken)
+            : await _trabajoRepository.GetPendientesByUsuarioAsync(
+                usuarioOperativoId,
+                cancellationToken);
 
         return trabajos.Select(MapToResponse).ToList();
     }
 
     public async Task<TrabajoResponse> ObtenerPorIdAsync(int id, CancellationToken cancellationToken = default)
     {
-        var trabajo = await _trabajoRepository.GetByIdAsync(id, cancellationToken)
-            ?? throw new ArgumentException("El trabajo indicado no existe.", nameof(id));
+        var trabajo = await ObtenerTrabajoAccesibleAsync(id, cancellationToken);
 
         return MapToResponse(trabajo);
     }
@@ -81,8 +96,9 @@ public class TrabajoService : ITrabajoService
         UpdateTrabajoStatusRequest request,
         CancellationToken cancellationToken = default)
     {
-        var trabajo = await _trabajoRepository.GetByIdAsync(trabajoId, cancellationToken)
-            ?? throw new ArgumentException("El trabajo indicado no existe.", nameof(trabajoId));
+        var trabajo = await ObtenerTrabajoAccesibleAsync(trabajoId, cancellationToken);
+
+        ValidarTransicion(trabajo.Estado, request.Estado);
 
         switch (request.Estado)
         {
@@ -104,6 +120,55 @@ public class TrabajoService : ITrabajoService
         await _trabajoRepository.UpdateAsync(trabajo, cancellationToken);
 
         return MapToResponse(trabajo);
+    }
+
+    private async Task<Trabajo> ObtenerTrabajoAccesibleAsync(
+        int trabajoId,
+        CancellationToken cancellationToken)
+    {
+        var usuarioOperativoId = await _operationalUserResolver
+            .ObtenerUsuarioOperativoIdAsync(cancellationToken);
+
+        var trabajo = _currentUserContext.IsAdmin
+            ? await _trabajoRepository.GetByIdAsync(trabajoId, cancellationToken)
+            : await _trabajoRepository.GetByIdAndUsuarioAsync(
+                trabajoId,
+                usuarioOperativoId,
+                cancellationToken);
+
+        return trabajo
+            ?? throw new ArgumentException("El trabajo indicado no existe.", nameof(trabajoId));
+    }
+
+    private static void ValidarTransicion(EstadoTrabajo estadoActual, EstadoTrabajo nuevoEstado)
+    {
+        if (!Enum.IsDefined(nuevoEstado))
+        {
+            throw new ArgumentException("El estado indicado no es valido.", nameof(nuevoEstado));
+        }
+
+        if (nuevoEstado == EstadoTrabajo.Pendiente)
+        {
+            throw new InvalidOperationException("No se puede volver un trabajo a estado pendiente.");
+        }
+
+        if (estadoActual is EstadoTrabajo.Finalizado or EstadoTrabajo.Cancelado)
+        {
+            throw new InvalidOperationException(
+                $"No se puede cambiar un trabajo {estadoActual} a {nuevoEstado}.");
+        }
+
+        var transicionValida =
+            estadoActual == EstadoTrabajo.Pendiente &&
+            nuevoEstado is EstadoTrabajo.EnProceso or EstadoTrabajo.Finalizado or EstadoTrabajo.Cancelado ||
+            estadoActual == EstadoTrabajo.EnProceso &&
+            nuevoEstado is EstadoTrabajo.Finalizado or EstadoTrabajo.Cancelado;
+
+        if (!transicionValida)
+        {
+            throw new InvalidOperationException(
+                $"La transicion de {estadoActual} a {nuevoEstado} no esta permitida.");
+        }
     }
 
     private static TrabajoResponse MapToResponse(Trabajo trabajo)

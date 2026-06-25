@@ -58,6 +58,11 @@ public class ApplicationDbContext : DbContext
             entity.Property(usuario => usuario.Rol)
                 .HasConversion<int>()
                 .IsRequired();
+
+            entity.HasOne(usuario => usuario.UsuarioResponsable)
+                .WithMany()
+                .HasForeignKey(usuario => usuario.IdUsuarioResponsable)
+                .OnDelete(DeleteBehavior.Restrict);
         });
     }
 

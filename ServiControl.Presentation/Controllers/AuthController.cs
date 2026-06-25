@@ -45,6 +45,7 @@ public class AuthController : ControllerBase
         }
     }
 
+    //permite usar el endpoint aunque el usuario no tenga token
     [AllowAnonymous]
     [HttpPost("login")]
     public async Task<ActionResult<LoginResponseDto>> Login(

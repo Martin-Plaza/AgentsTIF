@@ -4,7 +4,6 @@ namespace ServiControl.Application.DTOs;
 
 public record CreateTrabajoRequest(
     int ClienteId,
-    int UsuarioId,
     CategoriaServicio CategoriaServicio,
     string Descripcion,
     DateTime Fecha,

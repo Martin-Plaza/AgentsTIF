@@ -43,7 +43,22 @@ public class UsuarioRepository : GenericRepository<Usuario>, IUsuarioRepository
             return true;
         }
 
-        return await Context.Set<Metrica>()
+        var tieneMetricas = await Context.Set<Metrica>()
             .AnyAsync(metrica => metrica.UsuarioId == id, cancellationToken);
+
+        if (tieneMetricas)
+        {
+            return true;
+        }
+
+        return await HasAssistantsAsync(id, cancellationToken);
+    }
+
+    public async Task<bool> HasAssistantsAsync(
+        int id,
+        CancellationToken cancellationToken = default)
+    {
+        return await DbSet
+            .AnyAsync(usuario => usuario.IdUsuarioResponsable == id, cancellationToken);
     }
 }

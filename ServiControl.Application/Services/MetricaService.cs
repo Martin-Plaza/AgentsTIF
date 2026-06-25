@@ -1,3 +1,4 @@
+using ServiControl.Application.Authorization;
 using ServiControl.Application.DTOs;
 using ServiControl.Application.Interfaces;
 using ServiControl.Domain.Entities;
@@ -14,32 +15,72 @@ public class MetricaService : IMetricaService
     private readonly ITrabajoRepository _trabajoRepository;
     private readonly ICostoRepository _costoRepository;
     private readonly IUsuarioRepository _usuarioRepository;
+    private readonly ICurrentUserContext _currentUserContext;
+    private readonly IOperationalUserResolver _operationalUserResolver;
 
     public MetricaService(
         IMetricaRepository metricaRepository,
         ITrabajoRepository trabajoRepository,
         ICostoRepository costoRepository,
-        IUsuarioRepository usuarioRepository)
+        IUsuarioRepository usuarioRepository,
+        ICurrentUserContext currentUserContext,
+        IOperationalUserResolver operationalUserResolver)
     {
         _metricaRepository = metricaRepository;
         _trabajoRepository = trabajoRepository;
         _costoRepository = costoRepository;
         _usuarioRepository = usuarioRepository;
+        _currentUserContext = currentUserContext;
+        _operationalUserResolver = operationalUserResolver;
     }
 
-    public async Task<MetricaResponse> GenerarPorRangoAsync(
+    public async Task<MetricaResponse> GenerarPropiasAsync(
         GenerateMetricaRequest request,
         CancellationToken cancellationToken = default)
     {
-        if (!await _usuarioRepository.ExistsByIdAsync(request.UsuarioId, cancellationToken))
+        var usuarioOperativoId = await _operationalUserResolver
+            .ObtenerUsuarioOperativoIdAsync(cancellationToken);
+
+        return await GenerarAsync(usuarioOperativoId, request, cancellationToken);
+    }
+
+    public Task<MetricaResponse> GenerarParaUsuarioAsync(
+        int usuarioId,
+        GenerateMetricaRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        if (!_currentUserContext.IsAdmin)
         {
-            throw new ArgumentException("El usuario indicado no existe.", nameof(request.UsuarioId));
+            throw new UnauthorizedAccessException(
+                "Solo un administrador puede generar metricas para otro usuario.");
         }
 
+        return GenerarAsync(usuarioId, request, cancellationToken);
+    }
+
+    private async Task<MetricaResponse> GenerarAsync(
+        int usuarioId,
+        GenerateMetricaRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (request.PeriodoInicio > request.PeriodoFin)
+        {
+            throw new ArgumentException(
+                "La fecha de inicio del periodo debe ser menor o igual a la fecha de fin.");
+        }
+
+        if (!await _usuarioRepository.ExistsByIdAsync(usuarioId, cancellationToken))
+        {
+            throw new ArgumentException("El usuario indicado no existe.", nameof(usuarioId));
+        }
+
+        var periodoInicio = request.PeriodoInicio.ToDateTime(TimeOnly.MinValue);
+        var periodoFin = request.PeriodoFin.ToDateTime(TimeOnly.MaxValue);
+
         var trabajos = await _trabajoRepository.GetByUsuarioAndFechaRangeAsync(
-            request.UsuarioId,
-            request.PeriodoInicio,
-            request.PeriodoFin,
+            usuarioId,
+            periodoInicio,
+            periodoFin,
             cancellationToken);
 
         var trabajosFinalizados = trabajos
@@ -57,12 +98,12 @@ public class MetricaService : IMetricaService
         var trabajosPendientes = trabajos.Count(trabajo => trabajo.Estado == EstadoTrabajo.Pendiente);
 
         var metrica = new Metrica(
-            request.UsuarioId,
+            usuarioId,
             montoTotalPeriodo,
             trabajosFinalizados.Count,
             trabajosPendientes,
-            request.PeriodoInicio,
-            request.PeriodoFin);
+            periodoInicio,
+            periodoFin);
 
         var created = await _metricaRepository.AddAsync(metrica, cancellationToken);
 
