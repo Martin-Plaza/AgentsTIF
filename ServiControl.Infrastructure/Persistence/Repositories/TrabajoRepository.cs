@@ -16,6 +16,7 @@ public class TrabajoRepository : GenericRepository<Trabajo>, ITrabajoRepository
     public async Task<IReadOnlyList<Trabajo>> GetPendientesAsync(CancellationToken cancellationToken = default)
     {
         return await DbSet
+            //AsNoTracking es decirle a EF que no solo vas a leer los datos, no modificarlos
             .AsNoTracking()
             .Where(trabajo => trabajo.Estado == EstadoTrabajo.Pendiente)
             .ToListAsync(cancellationToken);

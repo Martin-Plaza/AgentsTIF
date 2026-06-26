@@ -34,6 +34,7 @@ public class MetricaService : IMetricaService
         _operationalUserResolver = operationalUserResolver;
     }
 
+
     public async Task<MetricaResponse> GenerarPropiasAsync(
         GenerateMetricaRequest request,
         CancellationToken cancellationToken = default)
@@ -41,9 +42,11 @@ public class MetricaService : IMetricaService
         var usuarioOperativoId = await _operationalUserResolver
             .ObtenerUsuarioOperativoIdAsync(cancellationToken);
 
+        //aca llamo a la funcion de abajo generarAsync
         return await GenerarAsync(usuarioOperativoId, request, cancellationToken);
     }
 
+    //es para generar metricas siendo admin
     public Task<MetricaResponse> GenerarParaUsuarioAsync(
         int usuarioId,
         GenerateMetricaRequest request,
@@ -58,6 +61,7 @@ public class MetricaService : IMetricaService
         return GenerarAsync(usuarioId, request, cancellationToken);
     }
 
+    //funcion para generar metricas
     private async Task<MetricaResponse> GenerarAsync(
         int usuarioId,
         GenerateMetricaRequest request,

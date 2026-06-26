@@ -32,11 +32,12 @@ public class TrabajoService : ITrabajoService
         CreateTrabajoRequest request,
         CancellationToken cancellationToken = default)
     {
+        //busca en el repo de cliente si existe y lo trae
         if (!await _clienteRepository.ExistsByIdAsync(request.ClienteId, cancellationToken))
         {
             throw new ArgumentException("El cliente indicado no existe.", nameof(request.ClienteId));
         }
-
+        //se fija si hay usuario responsable, si no hay deja null en la creacion posterior de trabajo
         var usuarioOperativoId = await _operationalUserResolver
             .ObtenerUsuarioOperativoIdAsync(cancellationToken);
 
@@ -56,10 +57,10 @@ public class TrabajoService : ITrabajoService
 
     public async Task<IReadOnlyList<TrabajoResponse>> ObtenerTodosAsync(
         CancellationToken cancellationToken = default)
-    {
+    {//se fija si hay usuario responsable
         var usuarioOperativoId = await _operationalUserResolver
             .ObtenerUsuarioOperativoIdAsync(cancellationToken);
-
+        //si es admin muestra todos, sino solo los que puede ver 
         var trabajos = _currentUserContext.IsAdmin
             ? await _trabajoRepository.GetAllAsync(cancellationToken)
             : await _trabajoRepository.GetByUsuarioAsync(
@@ -86,6 +87,7 @@ public class TrabajoService : ITrabajoService
 
     public async Task<TrabajoResponse> ObtenerPorIdAsync(int id, CancellationToken cancellationToken = default)
     {
+        //llama a la funcion declarada abajo
         var trabajo = await ObtenerTrabajoAccesibleAsync(id, cancellationToken);
 
         return MapToResponse(trabajo);
@@ -96,8 +98,11 @@ public class TrabajoService : ITrabajoService
         UpdateTrabajoStatusRequest request,
         CancellationToken cancellationToken = default)
     {
+        //llamamos a la fauncion declarada abajo
+        //analiza quien puede ver el trabajo y trae el/los trabajos
         var trabajo = await ObtenerTrabajoAccesibleAsync(trabajoId, cancellationToken);
 
+        //llama a la funcion de abajo para validar si se cambia un estado
         ValidarTransicion(trabajo.Estado, request.Estado);
 
         switch (request.Estado)
@@ -126,9 +131,10 @@ public class TrabajoService : ITrabajoService
         int trabajoId,
         CancellationToken cancellationToken)
     {
+        //trae al responsable (o no)
         var usuarioOperativoId = await _operationalUserResolver
             .ObtenerUsuarioOperativoIdAsync(cancellationToken);
-
+        //si es admin ve todos los trabajos, sino solo los que puede
         var trabajo = _currentUserContext.IsAdmin
             ? await _trabajoRepository.GetByIdAsync(trabajoId, cancellationToken)
             : await _trabajoRepository.GetByIdAndUsuarioAsync(
@@ -140,6 +146,7 @@ public class TrabajoService : ITrabajoService
             ?? throw new ArgumentException("El trabajo indicado no existe.", nameof(trabajoId));
     }
 
+    //aca validamos que no puedan pasar de un estado a otro si ya esta finalizado o cancelado
     private static void ValidarTransicion(EstadoTrabajo estadoActual, EstadoTrabajo nuevoEstado)
     {
         if (!Enum.IsDefined(nuevoEstado))

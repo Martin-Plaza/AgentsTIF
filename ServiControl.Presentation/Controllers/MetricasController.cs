@@ -40,7 +40,7 @@ public class MetricasController : ControllerBase
             return BadRequest(ex.Message);
         }
     }
-
+    //generar metricas para algun usuario desde admin
     [Authorize(Roles = Roles.Admin)]
     [HttpGet("usuario/{usuarioId:int}")]
     public async Task<ActionResult<MetricaResponse>> GenerarParaUsuario(
