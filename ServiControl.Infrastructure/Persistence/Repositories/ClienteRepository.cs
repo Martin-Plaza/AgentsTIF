@@ -12,6 +12,7 @@ public class ClienteRepository : GenericRepository<Cliente>, IClienteRepository
     {
     }
 
+    //devuelve verdadero si encuentra un id igual al de la request
     public async Task<bool> ExistsByIdAsync(int id, CancellationToken cancellationToken = default)
     {
         return await DbSet

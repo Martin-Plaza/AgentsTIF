@@ -83,13 +83,14 @@ public class CostoService : ICostoService
         return MapToResponse(costo);
     }
 
+    //funcion 
     private async Task ValidarTrabajoAccesibleAsync(
         int trabajoId,
         CancellationToken cancellationToken)
     {
         var usuarioOperativoId = await _operationalUserResolver
             .ObtenerUsuarioOperativoIdAsync(cancellationToken);
-
+        //si es admin puede ver todos los trabajos, cualquiera por id, sino busca por id y por usuario operativo 
         var trabajo = _currentUserContext.IsAdmin
             ? await _trabajoRepository.GetByIdAsync(trabajoId, cancellationToken)
             : await _trabajoRepository.GetByIdAndUsuarioAsync(

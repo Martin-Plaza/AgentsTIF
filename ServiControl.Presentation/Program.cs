@@ -73,7 +73,7 @@ builder.Services.AddCors(options =>
         var allowedOrigins = builder.Configuration
         //getsection toma toda la seccion cors
         //getChildren los hijos de esa seccion
-        //
+        
             .GetSection("Cors:AllowedOrigins")
             .GetChildren()
             .Select(origin => origin.Value)

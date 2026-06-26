@@ -25,6 +25,7 @@ public class AuthService : IAuthService
         _jwtTokenGenerator = jwtTokenGenerator;
     }
 
+    //solo admin tiene acceso a register
     public async Task<UserResponseDto> RegisterAsync(
         RegisterUserRequestDto request,
         CancellationToken cancellationToken = default)
@@ -60,6 +61,9 @@ public class AuthService : IAuthService
         return MapToResponse(created);
     }
 
+
+    //esta funcion es para crear un admin desde la terminal.
+    //dotnet run --project .\ServiControl.Presentation\ServiControl.Presentation.csproj -- create-admin
     public Task<UserResponseDto> CreateAdminAsync(
         CreateAdminRequestDto request,
         CancellationToken cancellationToken = default)
@@ -74,6 +78,8 @@ public class AuthService : IAuthService
             cancellationToken);
     }
 
+    
+    
     public async Task<LoginResponseDto> LoginAsync(
         LoginRequestDto request,
         CancellationToken cancellationToken = default)
@@ -100,6 +106,7 @@ public class AuthService : IAuthService
             usuario.Rol);
     }
 
+    // funcion para tomar a la entidad usuario y convertirlo en DTO
     private static UserResponseDto MapToResponse(Usuario usuario)
     {
         return new UserResponseDto(
@@ -110,16 +117,19 @@ public class AuthService : IAuthService
             usuario.IdUsuarioResponsable);
     }
 
+    //aca validamos el responsable para los asistentes
     private async Task ValidarResponsableAsync(
         RolUsuario rol,
         int? idUsuarioResponsable,
         CancellationToken cancellationToken)
     {
+        //si no es asistente retornamos nada
         if (rol != RolUsuario.Assistant)
         {
             return;
         }
 
+        //si pasa el filtro anterior (es decir, es asistente), pero no tiene responsable arroja excep
         if (!idUsuarioResponsable.HasValue)
         {
             throw new ArgumentException(
@@ -127,6 +137,7 @@ public class AuthService : IAuthService
                 nameof(idUsuarioResponsable));
         }
 
+        //preguntamos al repo si existe, si existe lo guarda
         var responsable = await _usuarioRepository.GetByIdAsync(
             idUsuarioResponsable.Value,
             cancellationToken)
@@ -134,6 +145,7 @@ public class AuthService : IAuthService
                 "El tecnico responsable indicado no existe.",
                 nameof(idUsuarioResponsable));
 
+        //si ese responsable no es tecnico arroja excep
         if (responsable.Rol != RolUsuario.Technician)
         {
             throw new ArgumentException(

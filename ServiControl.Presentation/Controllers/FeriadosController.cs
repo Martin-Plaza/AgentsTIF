@@ -8,7 +8,7 @@ namespace ServiControl.Presentation.Controllers;
 
 // Modulo: Integracion externa
 // Capa: Presentation
-// Responsabilidad: Expone el consumo protegido de feriados de Argentina.
+// Responsabilidad: Expone el consumo protegido de feriados de Argentina
 [ApiController]
 [Authorize(Roles = Roles.Todos)]
 [Route("api/feriados")]

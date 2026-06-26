@@ -10,21 +10,27 @@ namespace ServiControl.Infrastructure.Persistence.Context;
 // Nota: Se usa Fluent API para mantener Domain libre de atributos de persistencia.
 public class ApplicationDbContext : DbContext
 {
+    //options viene de program.cs builder.Services.AddDbContext 
+    //EF crea un objeto dbcontextOptions, conection String, proveedor SQL Server, configuraciones
+    //luego lo inyecta en base
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
         : base(options)
     {
     }
 
+    //tablas de la DB
     public DbSet<Usuario> Usuarios => Set<Usuario>();
     public DbSet<Cliente> Clientes => Set<Cliente>();
     public DbSet<Trabajo> Trabajos => Set<Trabajo>();
     public DbSet<Costo> Costos => Set<Costo>();
     public DbSet<Metrica> Metricas => Set<Metrica>();
 
+    //esto se ejecuta una sola vez cuando construye el modelo
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
 
+        //aca declaramos funciones para configurar cada tabla
         ConfigureUsuarios(modelBuilder);
         ConfigureClientes(modelBuilder);
         ConfigureTrabajos(modelBuilder);
@@ -32,6 +38,8 @@ public class ApplicationDbContext : DbContext
         ConfigureMetricas(modelBuilder);
     }
 
+    //luego configuramos cada tabla y le ponemos las restricciones que queremos y que son parte de la DB
+    //esto es parte de CODE FIRST
     private static void ConfigureUsuarios(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Usuario>(entity =>

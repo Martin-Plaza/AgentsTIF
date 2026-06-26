@@ -30,7 +30,7 @@ public class AuthController : ControllerBase
         try
         {
             var user = await _authService.RegisterAsync(request, cancellationToken);
-            //string.Empty reemplaza a la url del recurso creado
+            //string.Empty reemplaza a la url del recurso creado (que te pide el metodo Created)
             return Created(string.Empty, user);
         }
         catch (ArgumentException ex)
