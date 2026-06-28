@@ -82,6 +82,9 @@ public class ApplicationDbContext : DbContext
 
             entity.HasKey(cliente => cliente.Id);
 
+            entity.Property(cliente => cliente.UsuarioId)
+                .IsRequired();
+
             entity.Property(cliente => cliente.Nombre)
                 .HasMaxLength(100)
                 .IsRequired();
@@ -95,6 +98,13 @@ public class ApplicationDbContext : DbContext
 
             entity.Property(cliente => cliente.Observaciones)
                 .HasMaxLength(500);
+
+            entity.HasIndex(cliente => cliente.UsuarioId);
+
+            entity.HasOne<Usuario>()
+                .WithMany()
+                .HasForeignKey(cliente => cliente.UsuarioId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
     }
 
@@ -115,6 +125,7 @@ public class ApplicationDbContext : DbContext
                 .IsRequired();
 
             entity.Property(trabajo => trabajo.Fecha)
+                .HasColumnType("date")
                 .IsRequired();
 
             entity.Property(trabajo => trabajo.Direccion)

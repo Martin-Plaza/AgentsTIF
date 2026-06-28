@@ -16,6 +16,7 @@ public record UpdateClienteRequest(
 
 public record ClienteResponse(
     int Id,
+    int UsuarioId,
     string Nombre,
     string Telefono,
     string? Email,

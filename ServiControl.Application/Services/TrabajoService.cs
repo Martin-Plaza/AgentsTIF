@@ -32,14 +32,13 @@ public class TrabajoService : ITrabajoService
         CreateTrabajoRequest request,
         CancellationToken cancellationToken = default)
     {
-        //busca en el repo de cliente si existe y lo trae
-        if (!await _clienteRepository.ExistsByIdAsync(request.ClienteId, cancellationToken))
-        {
-            throw new ArgumentException("El cliente indicado no existe.", nameof(request.ClienteId));
-        }
-        //se fija si hay usuario responsable, si no hay deja null en la creacion posterior de trabajo
         var usuarioOperativoId = await _operationalUserResolver
             .ObtenerUsuarioOperativoIdAsync(cancellationToken);
+
+        await ValidarClienteAccesibleAsync(
+            request.ClienteId,
+            usuarioOperativoId,
+            cancellationToken);
 
         var trabajo = new Trabajo(
             request.ClienteId,
@@ -190,5 +189,23 @@ public class TrabajoService : ITrabajoService
             trabajo.Direccion,
             trabajo.Observaciones,
             trabajo.Estado);
+    }
+
+    private async Task ValidarClienteAccesibleAsync(
+        int clienteId,
+        int usuarioOperativoId,
+        CancellationToken cancellationToken)
+    {
+        var cliente = _currentUserContext.IsAdmin
+            ? await _clienteRepository.GetByIdAsync(clienteId, cancellationToken)
+            : await _clienteRepository.GetByIdAndUsuarioAsync(
+                clienteId,
+                usuarioOperativoId,
+                cancellationToken);
+
+        if (cliente is null)
+        {
+            throw new ArgumentException("El cliente indicado no existe.", nameof(clienteId));
+        }
     }
 }

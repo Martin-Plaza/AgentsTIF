@@ -78,13 +78,10 @@ public class MetricaService : IMetricaService
             throw new ArgumentException("El usuario indicado no existe.", nameof(usuarioId));
         }
 
-        var periodoInicio = request.PeriodoInicio.ToDateTime(TimeOnly.MinValue);
-        var periodoFin = request.PeriodoFin.ToDateTime(TimeOnly.MaxValue);
-
         var trabajos = await _trabajoRepository.GetByUsuarioAndFechaRangeAsync(
             usuarioId,
-            periodoInicio,
-            periodoFin,
+            request.PeriodoInicio,
+            request.PeriodoFin,
             cancellationToken);
 
         var trabajosFinalizados = trabajos
@@ -106,8 +103,8 @@ public class MetricaService : IMetricaService
             montoTotalPeriodo,
             trabajosFinalizados.Count,
             trabajosPendientes,
-            periodoInicio,
-            periodoFin);
+            request.PeriodoInicio.ToDateTime(TimeOnly.MinValue),
+            request.PeriodoFin.ToDateTime(TimeOnly.MaxValue));
 
         var created = await _metricaRepository.AddAsync(metrica, cancellationToken);
 

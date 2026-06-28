@@ -18,4 +18,24 @@ public class ClienteRepository : GenericRepository<Cliente>, IClienteRepository
         return await DbSet
             .AnyAsync(cliente => cliente.Id == id, cancellationToken);
     }
+
+    public async Task<IReadOnlyList<Cliente>> GetByUsuarioAsync(
+        int usuarioId,
+        CancellationToken cancellationToken = default)
+    {
+        return await DbSet
+            .AsNoTracking()
+            .Where(cliente => cliente.UsuarioId == usuarioId)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<Cliente?> GetByIdAndUsuarioAsync(
+        int id,
+        int usuarioId,
+        CancellationToken cancellationToken = default)
+    {
+        return await DbSet.FirstOrDefaultAsync(
+            cliente => cliente.Id == id && cliente.UsuarioId == usuarioId,
+            cancellationToken);
+    }
 }

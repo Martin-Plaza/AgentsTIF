@@ -56,8 +56,8 @@ public class TrabajoRepository : GenericRepository<Trabajo>, ITrabajoRepository
 
     public async Task<IReadOnlyList<Trabajo>> GetByUsuarioAndFechaRangeAsync(
         int usuarioId,
-        DateTime periodoInicio,
-        DateTime periodoFin,
+        DateOnly periodoInicio,
+        DateOnly periodoFin,
         CancellationToken cancellationToken = default)
     {
         return await DbSet

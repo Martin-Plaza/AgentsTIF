@@ -130,7 +130,7 @@ public class AuthService : IAuthService
         }
 
         //si pasa el filtro anterior (es decir, es asistente), pero no tiene responsable arroja excep
-        if (!idUsuarioResponsable.HasValue)
+        if (!idUsuarioResponsable.HasValue || idUsuarioResponsable.Value <= 0)
         {
             throw new ArgumentException(
                 "Un asistente debe tener un tecnico responsable.",

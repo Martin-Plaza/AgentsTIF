@@ -1,3 +1,4 @@
+using ServiControl.Application.Authorization;
 using ServiControl.Application.DTOs;
 using ServiControl.Application.Interfaces;
 using ServiControl.Domain.Entities;
@@ -10,18 +11,29 @@ namespace ServiControl.Application.Services;
 public class ClienteService : IClienteService
 {
     private readonly IClienteRepository _clienteRepository;
+    private readonly ICurrentUserContext _currentUserContext;
+    private readonly IOperationalUserResolver _operationalUserResolver;
 
-    public ClienteService(IClienteRepository clienteRepository)
+    public ClienteService(
+        IClienteRepository clienteRepository,
+        ICurrentUserContext currentUserContext,
+        IOperationalUserResolver operationalUserResolver)
     {
         _clienteRepository = clienteRepository;
+        _currentUserContext = currentUserContext;
+        _operationalUserResolver = operationalUserResolver;
     }
 
     public async Task<ClienteResponse> CrearAsync(
         CreateClienteRequest request,
         CancellationToken cancellationToken = default)
     {
+        var usuarioOperativoId = await _operationalUserResolver
+            .ObtenerUsuarioOperativoIdAsync(cancellationToken);
+
         //crea un cliente de dominio (en el return devolvemos el DTO creado al final de este modulo MapToResponse)
         var cliente = new Cliente(
+            usuarioOperativoId,
             request.Nombre,
             request.Telefono,
             request.Email,
@@ -36,7 +48,14 @@ public class ClienteService : IClienteService
     public async Task<IReadOnlyList<ClienteResponse>> ObtenerTodosAsync(
         CancellationToken cancellationToken = default)
     {
-        var clientes = await _clienteRepository.GetAllAsync(cancellationToken);
+        var usuarioOperativoId = await _operationalUserResolver
+            .ObtenerUsuarioOperativoIdAsync(cancellationToken);
+
+        var clientes = _currentUserContext.IsAdmin
+            ? await _clienteRepository.GetAllAsync(cancellationToken)
+            : await _clienteRepository.GetByUsuarioAsync(
+                usuarioOperativoId,
+                cancellationToken);
 
         return clientes.Select(MapToResponse).ToList();
     }
@@ -44,8 +63,7 @@ public class ClienteService : IClienteService
     public async Task<ClienteResponse> ObtenerPorIdAsync(int id, CancellationToken cancellationToken = default)
     {
         //si devuelve algo el repositorio, es decir, se obtuvo algun ID se guarda, sino arroja la excepcion (por eso el "??")
-        var cliente = await _clienteRepository.GetByIdAsync(id, cancellationToken)
-            ?? throw new ArgumentException("El cliente indicado no existe.", nameof(id));
+        var cliente = await ObtenerClienteAccesibleAsync(id, cancellationToken);
 
         return MapToResponse(cliente);
     }
@@ -55,8 +73,7 @@ public class ClienteService : IClienteService
         UpdateClienteRequest request,
         CancellationToken cancellationToken = default)
     {
-        var cliente = await _clienteRepository.GetByIdAsync(id, cancellationToken)
-            ?? throw new ArgumentException("El cliente indicado no existe.", nameof(id));
+        var cliente = await ObtenerClienteAccesibleAsync(id, cancellationToken);
 
         cliente.ActualizarDatos(
             request.Nombre,
@@ -74,9 +91,28 @@ public class ClienteService : IClienteService
     {
         return new ClienteResponse(
             cliente.Id,
+            cliente.UsuarioId,
             cliente.Nombre,
             cliente.Telefono,
             cliente.Email,
             cliente.Observaciones);
+    }
+
+    private async Task<Cliente> ObtenerClienteAccesibleAsync(
+        int clienteId,
+        CancellationToken cancellationToken)
+    {
+        var usuarioOperativoId = await _operationalUserResolver
+            .ObtenerUsuarioOperativoIdAsync(cancellationToken);
+
+        var cliente = _currentUserContext.IsAdmin
+            ? await _clienteRepository.GetByIdAsync(clienteId, cancellationToken)
+            : await _clienteRepository.GetByIdAndUsuarioAsync(
+                clienteId,
+                usuarioOperativoId,
+                cancellationToken);
+
+        return cliente
+            ?? throw new ArgumentException("El cliente indicado no existe.", nameof(clienteId));
     }
 }

@@ -12,12 +12,19 @@ public class Usuario
     public int? IdUsuarioResponsable { get; private set; }
     public Usuario? UsuarioResponsable { get; private set; }
 
+    private Usuario()
+    {
+        Nombre = string.Empty;
+        Email = string.Empty;
+        PasswordHash = string.Empty;
+    }
+
     public Usuario(
         string nombre,
         string email,
         string passwordHash,
         RolUsuario rol,
-        int? idUsuarioResponsable = null)
+        int? responsableId = null)
     {
         if (string.IsNullOrWhiteSpace(nombre))
         {
@@ -37,7 +44,7 @@ public class Usuario
         Nombre = nombre;
         Email = email;
         PasswordHash = passwordHash;
-        ConfigurarRolYResponsable(rol, idUsuarioResponsable);
+        ConfigurarRolYResponsable(rol, responsableId);
     }
 
     public void ActualizarDatos(string nombre, string email)

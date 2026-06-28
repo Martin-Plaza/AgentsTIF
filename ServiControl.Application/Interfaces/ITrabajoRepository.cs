@@ -17,7 +17,7 @@ public interface ITrabajoRepository : IGenericRepository<Trabajo>
         CancellationToken cancellationToken = default);
     Task<IReadOnlyList<Trabajo>> GetByUsuarioAndFechaRangeAsync(
         int usuarioId,
-        DateTime periodoInicio,
-        DateTime periodoFin,
+        DateOnly periodoInicio,
+        DateOnly periodoFin,
         CancellationToken cancellationToken = default);
 }
