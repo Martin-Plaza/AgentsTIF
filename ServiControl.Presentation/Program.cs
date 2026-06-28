@@ -14,9 +14,13 @@ using ServiControl.Presentation.Security;
 // Capa: Presentation
 // Responsabilidad: Configura servicios HTTP, autenticacion, Swagger y dependencias.
 // Nota: La configuracion se lee desde appsettings o variables de entorno, compatible con Azure App Service.
+//esta variable crea WebAplicationBuilder, que es un objeto para poder configurar y crear la aplicacion.
 var builder = WebApplication.CreateBuilder(args);
 
+//los logs son los mensajes que aparecen cuando sé está ejecutando algo
+//limpia todos los logs por defecto
 builder.Logging.ClearProviders();
+//los logs se van a ver en consola
 builder.Logging.AddConsole();
 
 //servicio para los controladores
@@ -56,6 +60,9 @@ builder.Services.AddSwaggerGen(options =>
 //las politicas de CORS permiten que un frontend consuma nuestra API. en nuestras politicas validamos quien queremos que consuma nuestra API (desde el navegador)
 builder.Services.AddCors(options =>
 {
+    //options es un objeto CorsOptions, que es para definir las politicas que tendra
+    //AddPolicy crea una politica que se llama CorsPolicy
+    //dentro en cada objeto Policy le damos las especificaciones, tanto de desarrollo como de producción
     options.AddPolicy("CorsPolicy", policy =>
     {
         //en entorno de desarrollo puede consumirla desde cualquier lugar (swagger por ejemplo)
@@ -89,6 +96,10 @@ builder.Services.AddCors(options =>
 });
 
 // Jwt:Key debe configurarse como variable de entorno en Azure: Jwt__Key.
+// las variables de entorno no pueden ser representadas como clave valor (con ":"), por eso se usa Jwt__Key, representando que hay niveles
+// Key es: vive dentro del servidor (las key vault en azure) o por ejemplo aca en el proyecto vive en appseting.development.json
+// Issuer es: quien emitió el token?
+// Audience es: para quien fue creado?
 var jwtKey = builder.Configuration["Jwt:Key"];
 var jwtIssuer = builder.Configuration["Jwt:Issuer"];
 var jwtAudience = builder.Configuration["Jwt:Audience"];
@@ -97,21 +108,22 @@ if (string.IsNullOrWhiteSpace(jwtKey))
 {
     throw new InvalidOperationException("La clave JWT no esta configurada.");
 }
-
+// cuando un endpoint tenga autorize utiliza bearer token
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
+        //aca configura las reglas y define que validar del token
         options.TokenValidationParameters = new TokenValidationParameters
         {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = jwtIssuer,
-            ValidAudience = jwtAudience,
-            RoleClaimType = ClaimTypes.Role,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
+            ValidateIssuer = true, //que el token haya sido emitido por la API
+            ValidateAudience = true, // que el receptor sea para nuestra app
+            ValidateLifetime = true, // que no este vencido
+            ValidateIssuerSigningKey = true, // que la firma sea valida
+            ValidIssuer = jwtIssuer, //que sea valido el valor del issuer
+            ValidAudience = jwtAudience, //que sea valido el valor del audience
+            RoleClaimType = ClaimTypes.Role, // indica donde buscar el rol
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)) // clave secreta para validar la firma
         };
 
         // Si el rol cambio o el usuario fue eliminado, el JWT anterior deja de ser valido.
